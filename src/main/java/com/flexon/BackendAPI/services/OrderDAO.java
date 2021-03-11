@@ -20,14 +20,17 @@ public class OrderDAO implements OrderInterface {
 
 	// Read Method --> Select an Order by OrderID
 	public Order getOrderID(int orderID) {
-		String sqlReadMethod = "select * from bankDB.Orders where orderID = ?";
+		String sqlGetOrderID = "select * from bankDB.Orders where orderID = ?";
 		Order currentOrder = new Order();
 		try {
-			PreparedStatement prepStatement = conn.prepareStatement(sqlReadMethod);
+			PreparedStatement prepStatement = conn.prepareStatement(sqlGetOrderID);
 			prepStatement.setInt(1, orderID);
 			ResultSet results = prepStatement.executeQuery();
+			if (results.next() == false) 
+				return null;
+			
 			while (results.next()) {
-				int KeyID = results.getInt("KeyID");
+				int KeyID = results.getInt("KeyID");		
 				int OrderID = results.getInt("orderID");
 				boolean Accepted = results.getBoolean("Accepted");
 				currentOrder.setKeyID(KeyID);
@@ -36,6 +39,7 @@ public class OrderDAO implements OrderInterface {
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
+			return null;
 		}
 		// get all items associated with an order
 		this.getItemsByOrderID(orderID, currentOrder);
@@ -52,7 +56,6 @@ public class OrderDAO implements OrderInterface {
 			prepStatement.setInt(1, orderID);
 			ResultSet results = prepStatement.executeQuery();
 			while (results.next()) {
-				Item currentItem = new Item();
 				// getters
 				int KeyID = results.getInt("KeyID");
 				String ItemName = results.getString("item_name");
@@ -61,15 +64,9 @@ public class OrderDAO implements OrderInterface {
 				int Quantity = results.getInt("Quantity");
 				int OrderID = results.getInt("orderID");
 				// setters
-				currentItem.setKeyID(KeyID);
-				currentItem.setName(ItemName);
-				currentItem.setPrice(Price);
-				currentItem.setSKU(SKU);
-				currentItem.setQuantity(Quantity);
-				currentItem.setOrderID(OrderID);
+				Item currentItem = new Item(KeyID, ItemName, Price, SKU, Quantity, OrderID, false);
 				// add currentItem to currentOrder's arraylist
 				currentOrder.Items.add(currentItem);
-
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -79,9 +76,9 @@ public class OrderDAO implements OrderInterface {
 
 	// Update Method --> Accept an Order's ship date.
 	public boolean acceptShipDate(int orderID) {
-		String sqlReadMethod = "update bankDB.Orders set Accepted = true where orderID = ?";
+		String sqlAcceptShipDate = "update bankDB.Orders set Accepted = true where orderID = ?";
 		try {
-			PreparedStatement prepStatement = conn.prepareStatement(sqlReadMethod);
+			PreparedStatement prepStatement = conn.prepareStatement(sqlAcceptShipDate);
 			prepStatement.setInt(1, orderID);
 			prepStatement.execute();
 			return true;
@@ -93,9 +90,9 @@ public class OrderDAO implements OrderInterface {
 
 	// Update Method --> Delete a specific item from an order by orderID and KeyID.
 	public boolean cancelItem(int orderID, int KeyID) {
-		String sqlReadMethod = "delete from bankDB.Items where orderID = ? and KeyID = ?";
+		String sqlDeleteItem = "delete from bankDB.Items where orderID = ? and KeyID = ?";
 		try {
-			PreparedStatement prepStatement = conn.prepareStatement(sqlReadMethod);
+			PreparedStatement prepStatement = conn.prepareStatement(sqlDeleteItem);
 			prepStatement.setInt(1, orderID);
 			prepStatement.setInt(2, KeyID);
 			prepStatement.execute();
